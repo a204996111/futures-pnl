@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <title>永豐全方way - 期貨損益計算機</title>
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="全方way期貨">
+    <meta name="theme-color" content="#f4f7f6">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+
+    <link rel="apple-touch-icon" href="logo.jpg">
+    <link rel="icon" type="image/jpeg" href="logo.jpg">
+    <link rel="shortcut icon" href="logo.jpg">
+
+    <style>
+        /* 基礎樣式設定 */
+        body {
+            font-family: "Microsoft JhengHei", "Heiti TC", sans-serif;
+            background-color: #f4f7f6;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; 
+            min-height: 100vh;   
+            margin: 0;
+            padding: 20px;
+            overscroll-behavior-y: none;
+            -webkit-user-select: none; 
+            user-select: none;
+        }
+
+        .container {
+            background-color: white; 
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='150'%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' transform='rotate(-25, 100, 75)' fill='rgba(0,0,0,0.12)' font-size='20' font-weight='bold' font-family='sans-serif'%3E%E6%B0%B8%E8%B1%90%E5%85%A8%E6%96%B9way%3C/text%3E%3C/svg%3E");
+            background-repeat: repeat;
+            background-position: center;
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+            margin-top: 20px; 
+            margin-bottom: 40px; 
+            position: relative;
+            z-index: 1;
+            transition: all 0.3s ease;
+        }
+
+        .brand-header {
+            display: flex;
+            align-items: center; 
+            justify-content: center;
+            margin-bottom: 30px;
+            gap: 15px; 
+        }
+
+        .brand-logo {
+            height: 85px; 
+            width: auto;
+            border-radius: 8px;
+        }
+
+        .brand-text {
+            text-align: center; 
+        }
+
+        .brand-text h1 {
+            color: #111;
+            font-size: 36px; 
+            margin: 0;
+            font-weight: 900; 
+            letter-spacing: 1px;
+        }
+
+        .brand-text h2 {
+            color: #555; 
+            font-size: 18px; 
+            margin: 5px 0 0 0;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+            text-align: left;
+            padding: 0 5px;
+        }
+
+        label {
+            display: block;
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        input.main-input, select.main-input {
+            width: 100%;
+            padding: 15px;
+            font-size: 30px;
+            border: 3px solid; 
+            border-radius: 12px;
+            text-align: center;
+            outline: none;
+            box-sizing: border-box;
+            background-color: rgba(255, 255, 255, 0.9); 
+            -webkit-user-select: text;
+            user-select: text;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        /* 讓下拉選單有明顯的箭頭圖示 */
+        select.main-input {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23666666%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+            background-repeat: no-repeat;
+            background-position: right 15px top 50%;
+            background-size: 18px auto;
+            padding-right: 40px; /* 預留箭頭空間 */
+            text-align: center;
+            text-align-last: center; /* 讓選中的文字置中 */
+        }
+
+        /* --- 動態主題顏色設定 --- */
+        /* 做多主題 (紅色) */
+        .theme-long input.main-input, .theme-long select.main-input {
+            border-color: #e74c3c;
+        }
+        .theme-long input.main-input:focus, .theme-long select.main-input:focus {
+            box-shadow: 0 0 8px rgba(231, 76, 60, 0.4);
+        }
+        
+        /* 做空主題 (綠色) */
+        .theme-short input.main-input, .theme-short select.main-input {
+            border-color: #27ae60;
+        }
+        .theme-short input.main-input:focus, .theme-short select.main-input:focus {
+            box-shadow: 0 0 8px rgba(39, 174, 96, 0.4);
+        }
+
+        .flex-row {
+            display: flex;
+            gap: 15px;
+        }
+        .flex-row .input-group {
+            flex: 1;
+            margin-bottom: 5px;
+        }
+
+        /* 多空按鈕設計 */
+        .dir-toggle-container {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .dir-btn {
+            flex: 1;
+            padding: 15px;
+            font-size: 28px;
+            font-weight: bold;
+            border-radius: 12px;
+            border: 3px solid #bdc3c7;
+            background-color: white;
+            color: #7f8c8d;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .dir-btn.long.active {
+            border-color: #e74c3c;
+            background-color: #fcebeb;
+            color: #e74c3c;
+        }
+        .dir-btn.short.active {
+            border-color: #27ae60;
+            background-color: #e9f7ef;
+            color: #27ae60;
+        }
+
+        /* 計算按鈕也跟著主題變色 */
+        button.calc-btn {
+            color: white;
+            border: none;
+            padding: 15px;
+            font-size: 30px;
+            border-radius: 15px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 15px;
+            font-weight: bold;
+            -webkit-tap-highlight-color: transparent;
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+        .theme-long button.calc-btn {
+            background-color: #e74c3c;
+            box-shadow: 0 5px 0 #c0392b;
+        }
+        .theme-short button.calc-btn {
+            background-color: #27ae60;
+            box-shadow: 0 5px 0 #1e8449;
+        }
+        button.calc-btn:active {
+            box-shadow: none !important;
+            transform: translateY(5px);
+        }
+
+        /* 結果區塊 */
+        .result-box {
+            margin-top: 25px;
+            display: none;
+        }
+
+        .highlight {
+            font-weight: bold;
+            font-size: 40px;
+            display: block;
+            margin-top: 5px;
+        }
+
+        .breakeven-box {
+            background-color: rgba(255, 234, 167, 0.95); 
+            padding: 20px; 
+            border-radius: 15px; 
+            margin-bottom: 15px;
+            color: #222;
+            font-size: 24px;
+        }
+
+        .fee-row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 10px;
+            background-color: rgba(241, 242, 246, 0.95);
+            padding: 15px;
+            border-radius: 15px;
+        }
+
+        .fee-item {
+            flex: 1;
+            font-size: 20px;
+            color: #555;
+            position: relative;
+        }
+
+        .fee-number {
+            display: block;
+            font-size: 28px;
+            color: #111;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        .divider {
+            font-size: 40px;
+            color: #b2bec3;
+            margin: 0 15px;
+            font-weight: 100;
+        }
+
+        .profit-box {
+            background-color: rgba(223, 230, 233, 0.95);
+            padding: 20px; 
+            border-radius: 15px;
+            margin-top: 20px;
+            font-size: 24px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container theme-long" id="main-container">
+        
+        <div class="brand-header">
+            <img src="logo.jpg" alt="團隊LOGO" class="brand-logo" onerror="this.style.display='none'">
+            <div class="brand-text">
+                <h1>永豐全方way</h1>
+                <h2>期貨損益計算機</h2>
+            </div>
+        </div>
+
+        <div class="dir-toggle-container">
+            <button class="dir-btn long active" id="btn-long" onclick="setDirection('long')">做多(買進)</button>
+            <button class="dir-btn short" id="btn-short" onclick="setDirection('short')">做空(賣出)</button>
+        </div>
+
+        <div class="input-group">
+            <label>1. 交易商品</label>
+            <select id="product" class="main-input">
+                <option value="200">大台 (TX) - 200元/點</option>
+                <option value="50">小台 (MTX) - 50元/點</option>
+                <option value="10" selected>微台 (TMF) - 10元/點</option>
+            </select>
+        </div>
+        
+        <div class="input-group">
+            <label>2. 進場點位</label>
+            <input type="number" id="entryPrice" class="main-input calc-trigger" placeholder="例: 35000" inputmode="decimal">
+        </div>
+        
+        <div class="input-group">
+            <label>3. 出場點位</label>
+            <input type="number" id="exitPrice" class="main-input calc-trigger" placeholder="例: 35200" inputmode="decimal">
+        </div>
+
+        <div class="flex-row">
+            <div class="input-group">
+                <label>4. 口數</label>
+                <input type="number" id="lots" class="main-input calc-trigger" value="1" inputmode="numeric">
+            </div>
+            <div class="input-group">
+                <label>5. 單邊手續費</label>
+                <input type="number" id="fee" class="main-input calc-trigger" placeholder="元" inputmode="numeric">
+            </div>
+        </div>
+
+        <button class="calc-btn" onclick="calculate()">開始計算</button>
+
+        <div id="result" class="result-box">
+            
+            <div class="breakeven-box">
+                毛損益 (點數差 × 乘數): <br>
+                <span id="res-gross" class="highlight" style="color: #d63031;">0</span>
+            </div>
+
+            <div class="fee-row">
+                <div class="fee-item">
+                    來回期交稅:<br>
+                    <span id="res-tax" class="fee-number">0</span>
+                </div>
+
+                <div class="divider">|</div>
+
+                <div class="fee-item">
+                    來回手續費:<br>
+                    <span id="res-fee" class="fee-number">0</span>
+                </div>
+            </div>
+
+            <div id="profitSection" class="profit-box">
+                預估總淨賺/賠: <br>
+                <span id="res-net" class="highlight">0</span>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        let currentDirection = 'long';
+
+        document.addEventListener('DOMContentLoaded', function() {
+            var triggers = document.querySelectorAll('.calc-trigger');
+            triggers.forEach(function(input) {
+                input.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        setTimeout(calculate, 50);
+                        input.blur(); 
+                    }
+                });
+            });
+        });
+
+        // 切換多空方向與主題顏色
+        function setDirection(dir) {
+            currentDirection = dir;
+            const container = document.getElementById('main-container');
+
+            if(dir === 'long') {
+                document.getElementById('btn-long').classList.add('active');
+                document.getElementById('btn-short').classList.remove('active');
+                
+                // 切換為紅色主題
+                container.classList.add('theme-long');
+                container.classList.remove('theme-short');
+            } else {
+                document.getElementById('btn-short').classList.add('active');
+                document.getElementById('btn-long').classList.remove('active');
+                
+                // 切換為綠色主題
+                container.classList.add('theme-short');
+                container.classList.remove('theme-long');
+            }
+            
+            if(document.getElementById('entryPrice').value && document.getElementById('exitPrice').value) {
+                calculate();
+            }
+        }
+
+        function calculate() {
+            const multiplier = parseFloat(document.getElementById('product').value);
+            const entryPrice = parseFloat(document.getElementById('entryPrice').value);
+            const exitPrice = parseFloat(document.getElementById('exitPrice').value);
+            const lots = parseFloat(document.getElementById('lots').value);
+            const singleFee = parseFloat(document.getElementById('fee').value) || 0;
+
+            if(!entryPrice || !exitPrice || !lots) {
+                return;
+            }
+
+            let pointsDiff = exitPrice - entryPrice;
+            if (currentDirection === 'short') {
+                pointsDiff = entryPrice - exitPrice;
+            }
+            const grossPnL = pointsDiff * multiplier * lots;
+
+            const taxRate = 0.00002;
+            const entryTax = Math.round(entryPrice * multiplier * taxRate) * lots;
+            const exitTax = Math.round(exitPrice * multiplier * taxRate) * lots;
+            const totalTax = entryTax + exitTax;
+
+            const totalFee = singleFee * 2 * lots;
+            const netPnL = grossPnL - totalTax - totalFee;
+
+            document.getElementById('res-gross').innerText = Math.round(grossPnL).toLocaleString();
+            document.getElementById('res-tax').innerText = totalTax.toLocaleString();
+            document.getElementById('res-fee').innerText = totalFee.toLocaleString();
+            
+            const netElement = document.getElementById('res-net');
+            const profitSection = document.getElementById('profitSection');
+            
+            netElement.innerText = Math.round(netPnL).toLocaleString() + " 元";
+
+            if (netPnL > 0) {
+                netElement.style.color = "white";
+                profitSection.style.backgroundColor = "#ff7675"; 
+                profitSection.style.color = "white"; 
+                netElement.innerText = "+" + netElement.innerText;
+            } else if (netPnL < 0) {
+                netElement.style.color = "#2d3436";
+                profitSection.style.backgroundColor = "#55efc4"; 
+                profitSection.style.color = "#2d3436";
+            } else {
+                netElement.style.color = "#333";
+                profitSection.style.backgroundColor = "#dfe6e9"; 
+                profitSection.style.color = "#333";
+            }
+
+            document.getElementById('result').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
